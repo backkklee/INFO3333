@@ -22,10 +22,10 @@ export function TftLogo({
       <Image
         src={src}
         alt="TFT — Tutor For Test"
-        width={120}
-        height={32}
+        width={200}
+        height={200}
         priority
-        className={`h-8 w-auto object-contain ${className}`}
+        className={`h-12 w-auto object-contain ${className}`}
       />
     );
   }
@@ -35,18 +35,18 @@ export function TftLogo({
       <Image
         src={src}
         alt="Tutor For Test"
-        width={160}
-        height={40}
+        width={700}
+        height={700}
         priority
-        className="h-10 w-auto object-contain"
+        className="h-16 w-auto object-contain"
       />
       {showTagline && (
         <div className="hidden min-w-0 text-left xl:block">
-          <div className="truncate text-[10px] font-medium uppercase tracking-wider text-tft-muted">
+          <div className="truncate text-[15px] font-medium uppercase tracking-wider text-tft-muted">
             TFT
           </div>
-          <div className="truncate text-[11px] leading-snug text-tft-muted">
-            Verified HD tutors. Unit-specific support.
+          <div className="truncate text-[16px] leading-snug text-tft-muted">
+            Tutor For Test
           </div>
         </div>
       )}
