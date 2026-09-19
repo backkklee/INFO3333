@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Compass,
   Calendar,
@@ -115,59 +116,70 @@ export default function TftApp() {
         />
 
         <div className="flex-1 pb-16 lg:pb-0">
-          {view === "discover" && (
-            <DiscoverView
-              tutors={tutors}
-              search={search}
-              setSearch={setSearch}
-              saved={saved}
-              setSaved={setSaved}
-              onProfile={setProfile}
-              onBook={setBookingTutor}
-              toast={notify}
-            />
-          )}
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={view}
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.16, ease: [0.25, 1, 0.5, 1] }}
+              className="flex-1"
+            >
+              {view === "discover" && (
+                <DiscoverView
+                  tutors={tutors}
+                  search={search}
+                  setSearch={setSearch}
+                  saved={saved}
+                  setSaved={setSaved}
+                  onProfile={setProfile}
+                  onBook={setBookingTutor}
+                  toast={notify}
+                />
+              )}
 
-          {view === "learning" && (
-            <StudentDashboard
-              bookings={bookings}
-              tutors={tutors}
-              saved={saved}
-              setSaved={setSaved}
-              onDiscover={() => setView("discover")}
-              onProfile={setProfile}
-              onBook={setBookingTutor}
-            />
-          )}
+              {view === "learning" && (
+                <StudentDashboard
+                  bookings={bookings}
+                  tutors={tutors}
+                  saved={saved}
+                  setSaved={setSaved}
+                  onDiscover={() => setView("discover")}
+                  onProfile={setProfile}
+                  onBook={setBookingTutor}
+                />
+              )}
 
-          {view === "messages" && (
-            <MessagesView
-              conversations={conversations}
-              tutors={tutors}
-              toast={notify}
-            />
-          )}
+              {view === "messages" && (
+                <MessagesView
+                  conversations={conversations}
+                  tutors={tutors}
+                  toast={notify}
+                />
+              )}
 
-          {view === "saved" && (
-            <SavedView
-              tutors={tutors}
-              saved={saved}
-              setSaved={setSaved}
-              onProfile={setProfile}
-              onBook={setBookingTutor}
-            />
-          )}
+              {view === "saved" && (
+                <SavedView
+                  tutors={tutors}
+                  saved={saved}
+                  setSaved={setSaved}
+                  onProfile={setProfile}
+                  onBook={setBookingTutor}
+                />
+              )}
 
-          {view === "apply" && <TutorApplicationView toast={notify} />}
+              {view === "apply" && <TutorApplicationView toast={notify} />}
 
-          {view === "tutor" && (
-            <TutorDashboardView
-              transactions={transactions}
-              toast={notify}
-            />
-          )}
+              {view === "tutor" && (
+                <TutorDashboardView
+                  transactions={transactions}
+                  toast={notify}
+                />
+              )}
 
-          {view === "help" && <HelpView />}
+              {view === "help" && <HelpView />}
+            </motion.div>
+          </AnimatePresence>
         </div>
 
         <Footer />

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   X,
   Check,
@@ -12,6 +13,11 @@ import {
   ShieldCheck,
   CreditCard,
   ChevronRight,
+  BookOpen,
+  Compass,
+  Code2,
+  Award,
+  FileCheck,
 } from "lucide-react";
 import { Tutor, Unit, Booking, Transaction } from "@/lib/types";
 import { Avatar, Button, cx } from "@/components/UiPrimitives";
@@ -22,344 +28,613 @@ interface BookingModalProps {
   onConfirm: (booking: Booking, transaction: Transaction) => void;
 }
 
+type VerificationStage = "authorizing" | "policy" | "confirmed";
+
 export function BookingModal({ tutor, onClose, onConfirm }: BookingModalProps) {
   const [step, setStep] = useState(1);
+  const [direction, setDirection] = useState(1);
   const [unit, setUnit] = useState<Unit>(tutor.units[0]);
-  const [topic, setTopic] = useState("Concept explanation");
   const [mode, setMode] = useState("Online");
   const [duration, setDuration] = useState(60);
   const [slot, setSlot] = useState(tutor.availability[0]);
-  const [goal, setGoal] = useState("");
+  const [goal, setGoal] = useState("Understand lecture concepts");
+  const [notes, setNotes] = useState("");
+  const [verifying, setVerifying] = useState(false);
+  const [verificationStage, setVerificationStage] =
+    useState<VerificationStage>("authorizing");
   const [done, setDone] = useState(false);
+  const [bookingRef, setBookingRef] = useState("");
 
   const subtotal = tutor.rate * (duration / 60);
   const fee = Number((subtotal * 0.08).toFixed(2));
   const total = subtotal + fee;
 
+  const handleNext = () => {
+    setDirection(1);
+    setStep((s) => s + 1);
+  };
+
+  const handleBack = () => {
+    setDirection(-1);
+    setStep((s) => s - 1);
+  };
+
   const handleConfirm = () => {
-    const bookingId = Date.now();
-    const newBooking: Booking = {
-      id: bookingId,
-      tutorId: tutor.id,
-      unit,
-      date: slot,
-      duration,
-      mode,
-      topic,
-      status: "Confirmed",
-    };
+    setVerifying(true);
+    setVerificationStage("authorizing");
+    const refCode = `TFT-${Math.floor(1000 + Math.random() * 9000)}`;
+    setBookingRef(refCode);
 
-    const newTransaction: Transaction = {
-      id: `TFT-${Math.floor(1000 + Math.random() * 9000)}`,
-      student: "Jamie N.",
-      unit,
-      date: "Today",
-      duration,
-      gross: subtotal,
-      fee,
-      status: "Paid",
-    };
+    // Beat 1: Authorizing payment
+    setTimeout(() => {
+      setVerificationStage("policy");
+    }, 600);
 
-    onConfirm(newBooking, newTransaction);
-    setDone(true);
+    // Beat 2: Validating academic policy and confirming
+    setTimeout(() => {
+      setVerificationStage("confirmed");
+      setVerifying(false);
+      setDone(true);
+
+      const bookingId = Date.now();
+      const newBooking: Booking = {
+        id: bookingId,
+        tutorId: tutor.id,
+        unit,
+        date: slot,
+        duration,
+        mode,
+        topic: goal,
+        status: "Confirmed",
+      };
+
+      const newTransaction: Transaction = {
+        id: refCode,
+        student: "Jamie N.",
+        unit,
+        date: "Today",
+        duration,
+        gross: subtotal,
+        fee,
+        status: "Paid",
+      };
+
+      onConfirm(newBooking, newTransaction);
+    }, 1200);
+  };
+
+  const stepVariants = {
+    enter: (dir: number) => ({
+      x: dir > 0 ? 24 : -24,
+      opacity: 0,
+    }),
+    center: {
+      x: 0,
+      opacity: 1,
+    },
+    exit: (dir: number) => ({
+      x: dir > 0 ? -24 : 24,
+      opacity: 0,
+    }),
   };
 
   return (
     <div
-      className="fixed inset-0 z-50 grid place-items-center overflow-y-auto bg-black/60 p-3"
+      className="fixed inset-0 z-50 grid place-items-center overflow-y-auto bg-black/65 p-3 sm:p-5 backdrop-blur-sm"
       role="dialog"
       aria-modal="true"
       aria-labelledby="booking-modal-title"
     >
-      <div className="w-full max-w-xl rounded-2xl border border-tft-border bg-tft-surface">
-        <header className="flex items-center justify-between border-b border-tft-border p-4">
+      <div className="w-full max-w-xl rounded-2xl border border-tft-border bg-tft-surface shadow-2xl overflow-hidden">
+        <header className="flex items-center justify-between border-b border-tft-border px-5 py-4">
           <div>
-            <div className="text-xs font-semibold text-tft-primary">
-              {done ? "Booking Confirmed" : `Step ${step} of 3`}
+            <div className="text-xs font-bold text-tft-primary uppercase tracking-wider">
+              {done ? "Booking Reserved" : `Step ${step} of 3`}
             </div>
             <h2 id="booking-modal-title" className="text-base font-bold text-tft-text">
               {done
-                ? "Session Reserved"
+                ? "Session Confirmed"
                 : step === 1
-                ? "Choose Session Details"
+                ? "Choose Session Format"
                 : step === 2
-                ? "Define Learning Goals"
-                : "Confirm and Authorize"}
+                ? "Select Learning Focus"
+                : "Review and Authorize"}
             </h2>
           </div>
           <button
             type="button"
             onClick={onClose}
             aria-label="Close booking modal"
-            className="rounded-lg p-1.5 text-tft-muted hover:bg-tft-elevated focus:outline-none focus-visible:ring-2 focus-visible:ring-tft-primary"
+            className="rounded-xl p-1.5 text-tft-muted hover:bg-tft-elevated hover:text-tft-text focus:outline-none focus-visible:ring-2 focus-visible:ring-tft-primary"
           >
             <X className="h-4 w-4" />
           </button>
         </header>
 
-        {!done && (
+        {!done && !verifying && (
           <div
-            className="h-1 w-full bg-tft-elevated"
+            className="h-1.5 w-full bg-tft-elevated"
             role="progressbar"
             aria-valuenow={step}
             aria-valuemin={1}
             aria-valuemax={3}
           >
             <div
-              className="h-full bg-tft-primary transition-all duration-200"
+              className="h-full bg-tft-primary transition-all duration-300"
               style={{ width: `${(step / 3) * 100}%` }}
             />
           </div>
         )}
 
-        <div className="p-5 text-xs">
-          {done ? (
-            <div className="py-6 text-center">
-              <div className="mx-auto grid h-12 w-12 place-items-center rounded-full bg-tft-success/15 text-tft-success">
-                <Check className="h-6 w-6" />
-              </div>
-              <h3 className="mt-3 text-lg font-black text-tft-text">
-                Session Confirmed with {tutor.name}
-              </h3>
-              <p className="mt-1 text-tft-muted">
-                {unit} · {slot} · {duration} minutes ({mode})
-              </p>
-              <div className="mt-5 flex justify-center gap-2">
-                <Button variant="secondary" onClick={onClose} className="text-xs py-2">
-                  <Calendar className="h-3.5 w-3.5" />
-                  View in My Learning
-                </Button>
-                <Button onClick={onClose} className="text-xs py-2">
-                  <MessageCircle className="h-3.5 w-3.5" />
-                  Return to Discover
-                </Button>
-              </div>
-            </div>
-          ) : step === 1 ? (
-            <div className="space-y-4">
-              <div className="grid gap-3 sm:grid-cols-2">
-                <label className="font-semibold text-tft-text">
-                  Target Unit
-                  <select
-                    value={unit}
-                    onChange={(e) => setUnit(e.target.value as Unit)}
-                    className="mt-1 w-full rounded-xl border border-tft-border bg-tft-elevated p-2.5 text-xs text-tft-text outline-none focus:border-tft-primary focus:ring-1 focus:ring-tft-primary"
-                  >
-                    {tutor.units.map((u) => (
-                      <option key={u} value={u}>
-                        {u}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-
-                <label className="font-semibold text-tft-text">
-                  Session Topic
-                  <select
-                    value={topic}
-                    onChange={(e) => setTopic(e.target.value)}
-                    className="mt-1 w-full rounded-xl border border-tft-border bg-tft-elevated p-2.5 text-xs text-tft-text outline-none focus:border-tft-primary focus:ring-1 focus:ring-tft-primary"
-                  >
-                    {[
-                      "Concept explanation",
-                      "Code review",
-                      "Exam preparation",
-                      "Assignment planning",
-                    ].map((x) => (
-                      <option key={x} value={x}>
-                        {x}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              </div>
-
-              <div>
-                <span className="font-semibold text-tft-text block mb-1">
-                  Format
-                </span>
-                <div className="grid grid-cols-2 gap-2">
-                  {["Online", "On campus"].map((m) => (
-                    <button
-                      key={m}
-                      type="button"
-                      onClick={() => setMode(m)}
-                      className={cx(
-                        "rounded-xl border p-2.5 text-center transition focus:outline-none focus-visible:ring-2 focus-visible:ring-tft-primary",
-                        mode === m
-                          ? "border-tft-primary bg-tft-primary/10 text-tft-text font-semibold"
-                          : "border-tft-border text-tft-muted hover:border-tft-primary/40"
-                      )}
-                    >
-                      {m === "Online" ? (
-                        <Video className="mx-auto mb-1 h-4 w-4" />
-                      ) : (
-                        <MapPin className="mx-auto mb-1 h-4 w-4" />
-                      )}
-                      {m}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <span className="font-semibold text-tft-text block mb-1">
-                  Duration
-                </span>
-                <div className="grid grid-cols-3 gap-2">
-                  {[30, 45, 60].map((d) => (
-                    <button
-                      key={d}
-                      type="button"
-                      onClick={() => setDuration(d)}
-                      className={cx(
-                        "rounded-xl border p-2 text-center transition focus:outline-none focus-visible:ring-2 focus-visible:ring-tft-primary",
-                        duration === d
-                          ? "border-tft-primary bg-tft-primary/10 text-tft-text font-semibold"
-                          : "border-tft-border text-tft-muted hover:border-tft-primary/40"
-                      )}
-                    >
-                      {d} min
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div>
-                <span className="font-semibold text-tft-text block mb-1">
-                  Available Slots
-                </span>
-                <div className="space-y-1.5">
-                  {tutor.availability.map((s) => (
-                    <button
-                      key={s}
-                      type="button"
-                      onClick={() => setSlot(s)}
-                      className={cx(
-                        "flex w-full items-center gap-2 rounded-xl border p-2.5 text-left transition focus:outline-none focus-visible:ring-2 focus-visible:ring-tft-primary",
-                        slot === s
-                          ? "border-tft-primary bg-tft-primary/10 text-tft-text font-semibold"
-                          : "border-tft-border text-tft-muted hover:border-tft-primary/40"
-                      )}
-                    >
-                      <Clock className="h-3.5 w-3.5 text-tft-primary" />
-                      <span>{s}</span>
-                      {slot === s && (
-                        <Check className="ml-auto h-3.5 w-3.5 text-tft-primary" />
-                      )}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-          ) : step === 2 ? (
-            <div className="space-y-3">
-              <label className="font-semibold text-tft-text block">
-                What would you like to focus on in this session?
-                <textarea
-                  value={goal}
-                  onChange={(e) => setGoal(e.target.value)}
-                  rows={4}
-                  placeholder="Share the concepts, exercises, or assignment rubric areas you would like to review..."
-                  className="mt-1.5 w-full resize-none rounded-xl border border-tft-border bg-tft-elevated p-2.5 text-xs text-tft-text outline-none focus:border-tft-primary focus:ring-1 focus:ring-tft-primary"
+        <div className="p-5 sm:p-6 text-xs min-h-[380px] flex flex-col justify-between">
+          {/* Verification Stepper Animation */}
+          {verifying && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0 }}
+              className="my-auto py-12 text-center space-y-5"
+            >
+              <div className="relative mx-auto h-20 w-20">
+                <motion.div
+                  animate={{ rotate: 360 }}
+                  transition={{ repeat: Infinity, duration: 1, ease: "linear" }}
+                  className="h-full w-full rounded-full border-3 border-tft-border border-t-tft-primary"
                 />
-              </label>
-
-              <div>
-                <span className="text-[11px] text-tft-muted block mb-1">
-                  Quick focus suggestions:
-                </span>
-                <div className="flex flex-wrap gap-1.5">
-                  {[
-                    "Understand lecture concepts",
-                    "Prepare for exam",
-                    "Review code logic",
-                    "Assignment approach",
-                    "Debug an error",
-                  ].map((sug) => (
-                    <button
-                      key={sug}
-                      type="button"
-                      onClick={() => setGoal(sug)}
-                      className="rounded-lg border border-tft-border px-2 py-1 text-[11px] text-tft-muted hover:border-tft-primary/50 hover:text-tft-text"
-                    >
-                      {sug}
-                    </button>
-                  ))}
-                </div>
+                <ShieldCheck className="absolute inset-0 m-auto h-8 w-8 text-tft-primary stroke-[1.75]" />
               </div>
 
-              <div className="rounded-xl border border-tft-warning/30 bg-tft-warning/10 p-3 text-xs text-tft-text flex gap-2">
-                <ShieldCheck className="h-4 w-4 shrink-0 text-tft-warning" />
-                <p>
-                  <strong>Academic Integrity Reminder:</strong> Tutors assist with guidance and constructive feedback. Assessed work must remain solely your own.
-                </p>
-              </div>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              <div className="rounded-xl border border-tft-border bg-tft-elevated p-4">
-                <div className="flex items-center gap-3">
-                  <Avatar tutor={tutor} size="sm" />
-                  <div>
-                    <div className="font-bold text-tft-text text-sm">
-                      {tutor.name}
-                    </div>
-                    <div className="text-[11px] text-tft-muted">
-                      {unit} · {slot} · {mode}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-3 space-y-2 border-t border-tft-border pt-3">
-                  {[
-                    ["Duration", `${duration} minutes`],
-                    ["Session Format", mode],
-                    ["Hourly Rate", `$${tutor.rate.toFixed(2)} AUD`],
-                    ["Subtotal", `$${subtotal.toFixed(2)} AUD`],
-                    ["Platform Service Fee", `$${fee.toFixed(2)} AUD`],
-                  ].map(([k, v]) => (
-                    <div key={k} className="flex justify-between">
-                      <span className="text-tft-muted">{k}</span>
-                      <span className="text-tft-text font-medium">{v}</span>
-                    </div>
-                  ))}
-                  <div className="flex justify-between border-t border-tft-border pt-2 text-sm font-bold text-tft-text">
-                    <span>Total</span>
-                    <span>${total.toFixed(2)} AUD</span>
-                  </div>
-                </div>
-              </div>
-
-              <div className="rounded-xl border border-tft-primary/30 bg-tft-primary/10 p-3">
-                <div className="flex items-center gap-2 font-semibold text-tft-text">
-                  <CreditCard className="h-4 w-4 text-tft-primary" />
-                  Simulated Demo Checkout
-                </div>
-                <p className="mt-1 text-[11px] text-tft-muted leading-relaxed">
-                  No payment method is charged. Confirming updates local state and synchronizes with the Tutor View ledger.
-                </p>
-              </div>
-            </div>
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={verificationStage}
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -6 }}
+                  transition={{ duration: 0.18 }}
+                  className="space-y-1"
+                >
+                  <p className="text-sm font-bold text-tft-text">
+                    {verificationStage === "authorizing"
+                      ? "Authorizing simulated session checkout..."
+                      : "Verifying unit prerequisites and academic safety..."}
+                  </p>
+                  <p className="text-xs text-tft-muted">
+                    {verificationStage === "authorizing"
+                      ? `$${total.toFixed(2)} AUD via demo student account`
+                      : "Ensuring peer tutoring compliance guidelines"}
+                  </p>
+                </motion.div>
+              </AnimatePresence>
+            </motion.div>
           )}
 
-          {!done && (
+          {/* Confirmation Screen Animation */}
+          {done && !verifying && (
+            <motion.div
+              initial="hidden"
+              animate="visible"
+              variants={{
+                hidden: { opacity: 0 },
+                visible: {
+                  opacity: 1,
+                  transition: { staggerChildren: 0.09, delayChildren: 0.1 },
+                },
+              }}
+              className="py-3 text-center space-y-4"
+            >
+              {/* SVG Self-Drawing Checkmark with Radiant Pulse */}
+              <div className="relative mx-auto grid h-20 w-20 place-items-center">
+                <motion.span
+                  initial={{ scale: 0.8, opacity: 0.8 }}
+                  animate={{ scale: [0.8, 1.5, 1.7], opacity: [0.8, 0.35, 0] }}
+                  transition={{ duration: 0.9, ease: "easeOut" }}
+                  className="absolute inset-0 rounded-full bg-tft-success/25"
+                />
+
+                <motion.div
+                  initial={{ scale: 0, rotate: -25 }}
+                  animate={{ scale: 1, rotate: 0 }}
+                  transition={{ type: "spring", stiffness: 360, damping: 20 }}
+                  className="relative grid h-16 w-16 place-items-center rounded-full bg-tft-success text-white shadow-lg"
+                >
+                  <svg
+                    className="h-9 w-9 stroke-white"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <motion.path
+                      d="M5 13l4 4L19 7"
+                      initial={{ pathLength: 0 }}
+                      animate={{ pathLength: 1 }}
+                      transition={{ duration: 0.38, delay: 0.15, ease: "easeOut" }}
+                    />
+                  </svg>
+                </motion.div>
+              </div>
+
+              <motion.div
+                variants={{
+                  hidden: { opacity: 0, y: 10 },
+                  visible: { opacity: 1, y: 0 },
+                }}
+              >
+                <div className="inline-flex items-center gap-1.5 rounded-full border border-tft-success/30 bg-tft-success/10 px-3.5 py-1 text-xs font-bold text-tft-success">
+                  {bookingRef} · Confirmed Reservation
+                </div>
+                <h3 className="mt-2 text-xl font-black text-tft-text">
+                  Session Booked with {tutor.name}
+                </h3>
+                <p className="mt-0.5 text-xs text-tft-muted">
+                  Calendar invite and room link have been generated.
+                </p>
+              </motion.div>
+
+              {/* Digital Session Pass Card */}
+              <motion.div
+                variants={{
+                  hidden: { opacity: 0, y: 12 },
+                  visible: { opacity: 1, y: 0 },
+                }}
+                className="mx-auto max-w-md rounded-xl border border-tft-border bg-tft-elevated p-4 text-left text-xs space-y-3 shadow-sm"
+              >
+                <div className="flex justify-between items-center border-b border-tft-border pb-2.5">
+                  <div className="flex items-center gap-2">
+                    <BookOpen className="h-4 w-4 text-tft-primary stroke-[1.75]" />
+                    <span className="font-bold text-tft-text text-sm">
+                      {unit} Peer Tutoring
+                    </span>
+                  </div>
+                  <span className="font-bold text-tft-primary">{mode}</span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3 text-[11px]">
+                  <div>
+                    <span className="text-tft-muted block font-medium">
+                      Scheduled Time:
+                    </span>
+                    <span className="font-bold text-tft-text">{slot}</span>
+                  </div>
+                  <div>
+                    <span className="text-tft-muted block font-medium">
+                      Session Duration:
+                    </span>
+                    <span className="font-bold text-tft-text">
+                      {duration} Minutes
+                    </span>
+                  </div>
+                </div>
+
+                <div className="border-t border-tft-border pt-2 text-[11px] flex justify-between text-tft-muted">
+                  <span>Payment Status:</span>
+                  <span className="font-bold text-tft-success">
+                    Authorised (${total.toFixed(2)} AUD)
+                  </span>
+                </div>
+              </motion.div>
+
+              {/* Action Buttons */}
+              <motion.div
+                variants={{
+                  hidden: { opacity: 0, y: 10 },
+                  visible: { opacity: 1, y: 0 },
+                }}
+                className="flex flex-wrap justify-center gap-2 pt-2"
+              >
+                <Button
+                  variant="secondary"
+                  onClick={onClose}
+                  className="h-11 px-4 text-xs font-bold transition-transform active:scale-95"
+                >
+                  <Calendar className="h-4 w-4 text-tft-primary" />
+                  Sync with Google Calendar
+                </Button>
+                <Button
+                  onClick={onClose}
+                  className="h-11 px-4 text-xs font-bold transition-transform active:scale-95"
+                >
+                  <MessageCircle className="h-4 w-4" />
+                  Message {tutor.name}
+                </Button>
+              </motion.div>
+            </motion.div>
+          )}
+
+          {/* Step 1: Tile Selectors */}
+          {!done && !verifying && step === 1 && (
+            <AnimatePresence mode="wait" custom={direction}>
+              <motion.div
+                key="step-1"
+                custom={direction}
+                variants={stepVariants}
+                initial="enter"
+                animate="center"
+                exit="exit"
+                transition={{ duration: 0.18, ease: "easeOut" }}
+                className="space-y-4"
+              >
+                <div>
+                  <span className="font-bold text-tft-text text-xs block mb-2">
+                    Select Target Unit
+                  </span>
+                  <div className="grid grid-cols-2 gap-2">
+                    {tutor.units.map((u) => (
+                      <button
+                        key={u}
+                        type="button"
+                        onClick={() => setUnit(u)}
+                        className={cx(
+                          "flex items-center gap-2.5 rounded-xl border p-3 text-left transition-all",
+                          unit === u
+                            ? "border-tft-primary bg-tft-primary/10 ring-1 ring-tft-primary"
+                            : "border-tft-border bg-tft-elevated hover:border-tft-primary/50"
+                        )}
+                      >
+                        <BookOpen className="h-4 w-4 text-tft-primary shrink-0 stroke-[1.75]" />
+                        <div>
+                          <div className="font-black text-xs text-tft-text">{u}</div>
+                          <div className="text-[10px] text-tft-muted">
+                            Verified HD Result
+                          </div>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <span className="font-bold text-tft-text text-xs block mb-2">
+                    Session Format
+                  </span>
+                  <div className="grid grid-cols-2 gap-2">
+                    {[
+                      {
+                        id: "Online",
+                        label: "Online Video Room",
+                        sub: "Screen share & audio",
+                        icon: Video,
+                      },
+                      {
+                        id: "On campus",
+                        label: "Campus Library",
+                        sub: "Collaborative study desk",
+                        icon: MapPin,
+                      },
+                    ].map(({ id, label, sub, icon: Icon }) => (
+                      <button
+                        key={id}
+                        type="button"
+                        onClick={() => setMode(id)}
+                        className={cx(
+                          "flex flex-col items-start rounded-xl border p-3 text-left transition-all",
+                          mode === id
+                            ? "border-tft-primary bg-tft-primary/10 ring-1 ring-tft-primary"
+                            : "border-tft-border bg-tft-elevated hover:border-tft-primary/50"
+                        )}
+                      >
+                        <Icon className="h-4 w-4 text-tft-primary stroke-[1.75] mb-1.5" />
+                        <span className="font-bold text-xs text-tft-text">
+                          {label}
+                        </span>
+                        <span className="text-[10px] text-tft-muted">{sub}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <span className="font-bold text-tft-text text-xs block mb-2">
+                    Session Duration
+                  </span>
+                  <div className="grid grid-cols-3 gap-2">
+                    {[30, 45, 60].map((d) => (
+                      <button
+                        key={d}
+                        type="button"
+                        onClick={() => setDuration(d)}
+                        className={cx(
+                          "rounded-xl border p-2.5 text-center font-bold text-xs transition-all",
+                          duration === d
+                            ? "border-tft-primary bg-tft-primary/10 text-tft-primary ring-1 ring-tft-primary"
+                            : "border-tft-border bg-tft-elevated text-tft-muted hover:text-tft-text"
+                        )}
+                      >
+                        {d} Minutes
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <span className="font-bold text-tft-text text-xs block mb-2">
+                    Available Time Slot
+                  </span>
+                  <div className="space-y-1.5">
+                    {tutor.availability.map((s) => (
+                      <button
+                        key={s}
+                        type="button"
+                        onClick={() => setSlot(s)}
+                        className={cx(
+                          "flex w-full items-center gap-2 rounded-xl border p-2.5 text-left transition-all",
+                          slot === s
+                            ? "border-tft-primary bg-tft-primary/10 text-tft-text font-semibold ring-1 ring-tft-primary"
+                            : "border-tft-border bg-tft-elevated text-tft-muted hover:border-tft-primary/50"
+                        )}
+                      >
+                        <Clock className="h-3.5 w-3.5 text-tft-primary" />
+                        <span>{s}</span>
+                        {slot === s && (
+                          <Check className="ml-auto h-4 w-4 text-tft-primary" />
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </motion.div>
+            </AnimatePresence>
+          )}
+
+          {/* Step 2: Goal Tiles */}
+          {!done && !verifying && step === 2 && (
+            <AnimatePresence mode="wait" custom={direction}>
+              <motion.div
+                key="step-2"
+                custom={direction}
+                variants={stepVariants}
+                initial="enter"
+                animate="center"
+                exit="exit"
+                transition={{ duration: 0.18, ease: "easeOut" }}
+                className="space-y-4"
+              >
+                <div>
+                  <span className="font-bold text-tft-text text-xs block mb-2">
+                    Choose Primary Learning Priority
+                  </span>
+                  <div className="grid grid-cols-2 gap-2">
+                    {[
+                      {
+                        title: "Lecture Concepts",
+                        desc: "Break down weekly core theory",
+                        icon: Compass,
+                      },
+                      {
+                        title: "Code Architecture",
+                        desc: "Review design patterns & syntax",
+                        icon: Code2,
+                      },
+                      {
+                        title: "Exam Strategy",
+                        desc: "Practice questions & test technique",
+                        icon: Award,
+                      },
+                      {
+                        title: "Rubric Review",
+                        desc: "Ensure approach aligns with marking",
+                        icon: FileCheck,
+                      },
+                    ].map(({ title, desc, icon: Icon }) => (
+                      <button
+                        key={title}
+                        type="button"
+                        onClick={() => setGoal(title)}
+                        className={cx(
+                          "flex flex-col items-start rounded-xl border p-3 text-left transition-all",
+                          goal === title
+                            ? "border-tft-primary bg-tft-primary/10 ring-1 ring-tft-primary"
+                            : "border-tft-border bg-tft-elevated hover:border-tft-primary/50"
+                        )}
+                      >
+                        <Icon className="h-4 w-4 text-tft-primary stroke-[1.75] mb-1.5" />
+                        <span className="font-bold text-xs text-tft-text">
+                          {title}
+                        </span>
+                        <span className="text-[10px] text-tft-muted">{desc}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="font-bold text-tft-text text-xs block mb-1">
+                    Specific Questions or Blockers (Optional)
+                  </label>
+                  <textarea
+                    value={notes}
+                    onChange={(e) => setNotes(e.target.value)}
+                    rows={3}
+                    placeholder="e.g. Need clarification on SQL joins and query optimization..."
+                    className="w-full resize-none rounded-xl border border-tft-border bg-tft-elevated p-2.5 text-xs text-tft-text outline-none focus:border-tft-primary focus:ring-1 focus:ring-tft-primary"
+                  />
+                </div>
+
+                <div className="rounded-xl border border-tft-warning/30 bg-tft-warning/10 p-3 text-xs text-tft-text flex items-center gap-2.5">
+                  <ShieldCheck className="h-4 w-4 shrink-0 text-tft-warning stroke-[1.75]" />
+                  <p className="text-[11px] leading-relaxed">
+                    <strong>Academic Integrity Notice:</strong> Tutors support your independent understanding. They must never solve or author assessable tasks for you.
+                  </p>
+                </div>
+              </motion.div>
+            </AnimatePresence>
+          )}
+
+          {/* Step 3: Confirmation Summary */}
+          {!done && !verifying && step === 3 && (
+            <AnimatePresence mode="wait" custom={direction}>
+              <motion.div
+                key="step-3"
+                custom={direction}
+                variants={stepVariants}
+                initial="enter"
+                animate="center"
+                exit="exit"
+                transition={{ duration: 0.18, ease: "easeOut" }}
+                className="space-y-4"
+              >
+                <div className="rounded-xl border border-tft-border bg-tft-elevated p-4 space-y-3">
+                  <div className="flex items-center gap-3 border-b border-tft-border pb-3">
+                    <Avatar tutor={tutor} size="sm" />
+                    <div>
+                      <div className="font-bold text-tft-text text-sm">
+                        {tutor.name}
+                      </div>
+                      <div className="text-[11px] text-tft-muted">
+                        {unit} · {slot} · {mode}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2 text-xs">
+                    {[
+                      ["Priority Focus", goal],
+                      ["Duration", `${duration} Minutes`],
+                      ["Hourly Rate", `$${tutor.rate.toFixed(2)} AUD`],
+                      ["Session Subtotal", `$${subtotal.toFixed(2)} AUD`],
+                      ["Platform Service Fee", `$${fee.toFixed(2)} AUD`],
+                    ].map(([label, val]) => (
+                      <div key={label} className="flex justify-between">
+                        <span className="text-tft-muted">{label}</span>
+                        <span className="font-semibold text-tft-text">{val}</span>
+                      </div>
+                    ))}
+                    <div className="flex justify-between border-t border-tft-border pt-2 text-base font-black text-tft-text">
+                      <span>Total</span>
+                      <span className="text-tft-primary">${total.toFixed(2)} AUD</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="rounded-xl border border-tft-primary/30 bg-tft-primary/10 p-3 flex items-center gap-2.5">
+                  <CreditCard className="h-5 w-5 text-tft-primary shrink-0 stroke-[1.75]" />
+                  <p className="text-[11px] text-tft-muted leading-relaxed">
+                    Demo Checkout: No card details are charged. Clicking reserve triggers simulated authorization and records to the live ledger.
+                  </p>
+                </div>
+              </motion.div>
+            </AnimatePresence>
+          )}
+
+          {/* Modal Footer Controls */}
+          {!done && !verifying && (
             <footer className="mt-5 flex justify-between pt-3 border-t border-tft-border">
               <Button
                 variant="secondary"
                 disabled={step === 1}
-                onClick={() => setStep(step - 1)}
-                className="text-xs py-2"
+                onClick={handleBack}
+                className="h-10 text-xs px-4"
               >
                 Back
               </Button>
               {step < 3 ? (
-                <Button onClick={() => setStep(step + 1)} className="text-xs py-2">
+                <Button onClick={handleNext} className="h-10 text-xs px-5">
                   Continue
                   <ChevronRight className="h-3.5 w-3.5" />
                 </Button>
               ) : (
-                <Button onClick={handleConfirm} className="text-xs py-2">
+                <Button onClick={handleConfirm} className="h-10 text-xs px-5 font-bold">
                   <CreditCard className="h-3.5 w-3.5" />
                   Confirm and Reserve (${total.toFixed(2)})
                 </Button>

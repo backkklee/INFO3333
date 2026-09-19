@@ -1,13 +1,16 @@
 "use client";
 
 import React, { useMemo, useState } from "react";
+import { motion } from "framer-motion";
 import {
   Search,
   SlidersHorizontal,
   RotateCcw,
-  CheckCircle2,
   Award,
   X,
+  Clock,
+  ShieldCheck,
+  GraduationCap,
 } from "lucide-react";
 import { FilterState, Tutor, Unit } from "@/lib/types";
 import { units, topicOptions } from "@/lib/mockData";
@@ -282,63 +285,71 @@ export function DiscoverView({
 
   return (
     <div>
-      {/* Clean Hero Section without AI Slop Glow or Ambient Orbs */}
-      <section className="border-b border-tft-border bg-tft-surface px-4 py-10 sm:px-6 sm:py-12 lg:px-8">
+      {/* Scaled Presentation Hero Section */}
+      <section className="border-b border-tft-border bg-tft-surface px-4 py-10 sm:px-6 sm:py-14 lg:px-8">
         <div className="mx-auto max-w-4xl">
           <Badge tone="primary" className="mb-4">
             <Award className="h-3.5 w-3.5" />
             Verified High Distinction Peer Tutoring
           </Badge>
-          <h1 className="max-w-3xl text-2xl font-black tracking-tight text-tft-text sm:text-3xl lg:text-4xl">
+          <h1 className="max-w-3xl text-3xl font-black tracking-tight text-tft-text sm:text-4xl lg:text-5xl">
             Learn from students who have mastered your unit.
           </h1>
           <p className="mt-3 max-w-2xl text-sm leading-relaxed text-tft-muted sm:text-base">
-            Connect with verified high-achieving student tutors who understand unit expectations, assessment criteria, and exam formats.
+            Connect with verified high-achieving student tutors for targeted assessment prep and conceptual mastery.
           </p>
 
-          <div className="mt-6 flex max-w-2xl flex-col gap-2 sm:flex-row">
-            <div className="relative flex-1">
-              <label htmlFor="hero-search-input" className="sr-only">
-                Search tutors by unit or topic
-              </label>
-              <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-tft-muted" />
-              <input
-                id="hero-search-input"
-                type="search"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Try INFO2222, databases, or COMP2017..."
-                className="w-full rounded-xl border border-tft-border bg-tft-bg p-3 pl-10 text-xs text-tft-text outline-none placeholder:text-tft-muted focus:border-tft-primary focus:ring-1 focus:ring-tft-primary"
-              />
-            </div>
+          {/* Enlarged Presentation Search Bar */}
+          <div className="relative mt-6 max-w-3xl">
+            <label htmlFor="hero-search-input" className="sr-only">
+              Search tutors by unit or topic
+            </label>
+            <Search className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-tft-muted stroke-[1.75]" />
+            <input
+              id="hero-search-input"
+              type="search"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Search unit code (INFO2222, COMP2017) or topic..."
+              className="h-14 w-full rounded-2xl border border-tft-border bg-tft-bg pl-12 pr-28 text-sm text-tft-text outline-none placeholder:text-tft-muted focus:border-tft-primary focus:ring-1 focus:ring-tft-primary shadow-sm"
+            />
             <Button
               onClick={() => {}}
-              className="px-6 py-2.5 text-xs"
+              className="absolute right-2 top-2 h-10 px-5 text-xs font-bold"
             >
               Search
             </Button>
           </div>
 
-          <div className="mt-4 flex flex-wrap items-center gap-1.5">
-            <span className="text-xs font-medium text-tft-muted">Popular units:</span>
+          {/* Popular Units Bar */}
+          <div className="mt-4 flex flex-wrap items-center gap-2">
+            <span className="text-xs font-semibold text-tft-muted">Quick units:</span>
             {["INFO2222", "COMP2017", "DATA2001", "ECON1001"].map((code) => (
               <button
                 key={code}
                 type="button"
                 onClick={() => applyUnitChip(code)}
-                className="rounded-lg border border-tft-border bg-tft-bg px-2.5 py-1 text-xs text-tft-muted transition hover:border-tft-primary hover:text-tft-text focus:outline-none focus-visible:ring-2 focus-visible:ring-tft-primary"
+                className="rounded-xl border border-tft-border bg-tft-bg px-3.5 py-1.5 text-xs font-bold text-tft-text transition hover:border-tft-primary hover:bg-tft-elevated focus:outline-none focus-visible:ring-2 focus-visible:ring-tft-primary"
               >
                 {code}
               </button>
             ))}
           </div>
 
-          <div className="mt-6 flex flex-wrap gap-5 text-xs text-tft-muted">
-            {["Verified unit results", "Transparent peer ratings", "Safe demo booking"].map((feature) => (
-              <span key={feature} className="flex items-center gap-1.5">
-                <CheckCircle2 className="h-3.5 w-3.5 text-tft-success" />
-                {feature}
-              </span>
+          {/* Monochromatic Feature Stat Strip */}
+          <div className="mt-6 flex flex-wrap gap-2.5">
+            {[
+              { icon: GraduationCap, text: "High Distinction Peer Tutors" },
+              { icon: Clock, text: "Same-Day Session Availability" },
+              { icon: ShieldCheck, text: "Academic Honesty Compliance" },
+            ].map(({ icon: Icon, text }) => (
+              <div
+                key={text}
+                className="flex items-center gap-2 rounded-xl border border-tft-border bg-tft-elevated px-3.5 py-2 text-xs font-semibold text-tft-text"
+              >
+                <Icon className="h-4 w-4 text-tft-primary stroke-[1.75]" />
+                <span>{text}</span>
+              </div>
             ))}
           </div>
         </div>
@@ -357,9 +368,9 @@ export function DiscoverView({
         </aside>
 
         <main className="p-4 sm:p-6 lg:p-8">
-          <div className="mb-5 flex items-center justify-between">
+          <div className="mb-6 flex items-center justify-between">
             <div>
-              <h2 className="text-lg font-bold text-tft-text">Available Tutors</h2>
+              <h2 className="text-xl font-bold text-tft-text">Available Tutors</h2>
               <p className="text-xs text-tft-muted">
                 Showing {results.length} verified tutors matching your criteria.
               </p>
@@ -375,18 +386,29 @@ export function DiscoverView({
           </div>
 
           {results.length ? (
-            <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+            <motion.div
+              layout
+              className="grid gap-5 md:grid-cols-2 xl:grid-cols-3"
+            >
               {results.map((tutor) => (
-                <TutorCard
+                <motion.div
+                  layout
                   key={tutor.id}
-                  tutor={tutor}
-                  saved={saved.has(tutor.id)}
-                  onSave={() => toggleSave(tutor.id)}
-                  onProfile={() => onProfile(tutor)}
-                  onBook={() => onBook(tutor)}
-                />
+                  initial={{ opacity: 0, scale: 0.96 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.96 }}
+                  transition={{ duration: 0.18, layout: { duration: 0.2 } }}
+                >
+                  <TutorCard
+                    tutor={tutor}
+                    saved={saved.has(tutor.id)}
+                    onSave={() => toggleSave(tutor.id)}
+                    onProfile={() => onProfile(tutor)}
+                    onBook={() => onBook(tutor)}
+                  />
+                </motion.div>
               ))}
-            </div>
+            </motion.div>
           ) : (
             <div className="grid min-h-64 place-items-center rounded-2xl border border-dashed border-tft-border bg-tft-elevated/40 p-8 text-center">
               <div>
