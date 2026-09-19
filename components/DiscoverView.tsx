@@ -370,9 +370,16 @@ export function DiscoverView({
         <main className="p-4 sm:p-6 lg:p-8">
           <div className="mb-6 flex items-center justify-between">
             <div>
-              <h2 className="text-xl font-bold text-tft-text">Available Tutors</h2>
+              <div className="flex items-center gap-2">
+                <h2 className="text-xl font-bold text-tft-text">Available Tutors</h2>
+                {results.length > 6 && (
+                  <span className="text-xs text-tft-muted font-medium">
+                    (Showing top 6 of {results.length})
+                  </span>
+                )}
+              </div>
               <p className="text-xs text-tft-muted">
-                Showing {results.length} verified tutors matching your criteria.
+                Showing verified tutors matching your criteria.
               </p>
             </div>
             <Button
@@ -390,7 +397,7 @@ export function DiscoverView({
               layout
               className="grid gap-5 md:grid-cols-2 xl:grid-cols-3"
             >
-              {results.map((tutor) => (
+              {results.slice(0, 6).map((tutor) => (
                 <motion.div
                   layout
                   key={tutor.id}

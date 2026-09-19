@@ -45,7 +45,7 @@ export function SavedView({
 
       <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
         {savedList.length ? (
-          savedList.map((tutor) => (
+          savedList.slice(0, 6).map((tutor) => (
             <TutorCard
               key={tutor.id}
               tutor={tutor}

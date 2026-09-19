@@ -40,9 +40,11 @@ export function TutorDashboardView({
   );
   const netEarnings = grossEarnings - totalFees;
 
+  // Cap recent session ledger list to 5 items
+  const cappedTransactions = transactions.slice(0, 5);
+
   const handleRequestPayout = () => {
     setPayoutProcessing(true);
-    // 800ms bank simulation
     setTimeout(() => {
       setPayoutProcessing(false);
       setPayoutDone(true);
@@ -76,70 +78,70 @@ export function TutorDashboardView({
         </Button>
       </header>
 
-      {/* Enlarged Presentation Metric Tiles */}
-      <section className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <div className="rounded-2xl border border-tft-primary/40 bg-tft-surface p-6 shadow-sm">
-          <div className="flex items-center justify-between">
-            <div className="grid h-12 w-12 place-items-center rounded-2xl border border-tft-primary/30 bg-tft-primary/10 text-tft-primary">
-              <Banknote className="h-6 w-6 stroke-[1.75]" />
+      {/* Single-Line Big Number Tabs on Mobile with Text on Same Level as Icon */}
+      <section className="grid grid-flow-col auto-cols-[minmax(140px,1fr)] overflow-x-auto gap-2.5 sm:grid-flow-row sm:auto-cols-auto sm:grid-cols-2 xl:grid-cols-4 pb-1 sm:pb-0">
+        <div className="rounded-xl sm:rounded-2xl border border-tft-primary/40 bg-tft-surface p-3.5 sm:p-5 shadow-sm">
+          <div className="flex items-center gap-2.5 sm:gap-3.5">
+            <div className="grid h-10 w-10 sm:h-12 sm:w-12 shrink-0 place-items-center rounded-xl border border-tft-primary/30 bg-tft-primary/10 text-tft-primary">
+              <Banknote className="h-5 w-5 sm:h-6 sm:w-6 stroke-[1.75]" />
             </div>
-            <Badge tone="success">+12.4% this week</Badge>
+            <div className="min-w-0 flex-1">
+              <div className="text-base sm:text-2xl xl:text-3xl font-black text-tft-text tracking-tight leading-none truncate">
+                ${netEarnings.toFixed(2)}
+              </div>
+              <div className="mt-1 text-[11px] font-bold text-tft-text truncate">
+                Available Net
+              </div>
+            </div>
           </div>
-          <div className="mt-5 text-3xl sm:text-4xl font-black text-tft-text tracking-tight">
-            ${netEarnings.toFixed(2)}
-          </div>
-          <div className="mt-1 text-xs font-bold text-tft-text">
-            Available Net Balance
-          </div>
-          <div className="text-[11px] text-tft-muted">After platform service fee</div>
         </div>
 
-        <div className="rounded-2xl border border-tft-border bg-tft-surface p-6 shadow-sm">
-          <div className="flex items-center justify-between">
-            <div className="grid h-12 w-12 place-items-center rounded-2xl border border-tft-border bg-tft-elevated text-tft-primary">
-              <Clock className="h-6 w-6 stroke-[1.75]" />
+        <div className="rounded-xl sm:rounded-2xl border border-tft-border bg-tft-surface p-3.5 sm:p-5 shadow-sm">
+          <div className="flex items-center gap-2.5 sm:gap-3.5">
+            <div className="grid h-10 w-10 sm:h-12 sm:w-12 shrink-0 place-items-center rounded-xl border border-tft-border bg-tft-elevated text-tft-primary">
+              <Clock className="h-5 w-5 sm:h-6 sm:w-6 stroke-[1.75]" />
             </div>
-            <span className="text-[11px] font-semibold text-tft-muted">This Month</span>
+            <div className="min-w-0 flex-1">
+              <div className="text-base sm:text-2xl xl:text-3xl font-black text-tft-text tracking-tight leading-none truncate">
+                14.5 hrs
+              </div>
+              <div className="mt-1 text-[11px] font-bold text-tft-muted truncate">
+                Tutoring Hours
+              </div>
+            </div>
           </div>
-          <div className="mt-5 text-3xl sm:text-4xl font-black text-tft-text tracking-tight">
-            14.5 hrs
-          </div>
-          <div className="mt-1 text-xs font-bold text-tft-text">
-            Tutoring Hours
-          </div>
-          <div className="text-[11px] text-tft-muted">8 completed sessions</div>
         </div>
 
-        <div className="rounded-2xl border border-tft-border bg-tft-surface p-6 shadow-sm">
-          <div className="flex items-center justify-between">
-            <div className="grid h-12 w-12 place-items-center rounded-2xl border border-tft-border bg-tft-elevated text-tft-primary">
-              <Star className="h-6 w-6 stroke-[1.75]" />
+        <div className="rounded-xl sm:rounded-2xl border border-tft-border bg-tft-surface p-3.5 sm:p-5 shadow-sm">
+          <div className="flex items-center gap-2.5 sm:gap-3.5">
+            <div className="grid h-10 w-10 sm:h-12 sm:w-12 shrink-0 place-items-center rounded-xl border border-tft-border bg-tft-elevated text-tft-primary">
+              <Star className="h-5 w-5 sm:h-6 sm:w-6 stroke-[1.75]" />
             </div>
-            <Badge tone="primary">Verified</Badge>
+            <div className="min-w-0 flex-1">
+              <div className="text-base sm:text-2xl xl:text-3xl font-black text-tft-text tracking-tight leading-none truncate">
+                4.9 / 5.0
+              </div>
+              <div className="mt-1 text-[11px] font-bold text-tft-muted truncate">
+                Peer Rating
+              </div>
+            </div>
           </div>
-          <div className="mt-5 text-3xl sm:text-4xl font-black text-tft-text tracking-tight">
-            4.9 / 5.0
-          </div>
-          <div className="mt-1 text-xs font-bold text-tft-text">
-            Average Peer Rating
-          </div>
-          <div className="text-[11px] text-tft-muted">Based on 38 student reviews</div>
         </div>
 
-        <div className="rounded-2xl border border-tft-border bg-tft-surface p-6 shadow-sm">
-          <div className="flex items-center justify-between">
-            <div className="grid h-12 w-12 place-items-center rounded-2xl border border-tft-border bg-tft-elevated text-tft-primary">
-              <Users className="h-6 w-6 stroke-[1.75]" />
+        <div className="rounded-xl sm:rounded-2xl border border-tft-border bg-tft-surface p-3.5 sm:p-5 shadow-sm">
+          <div className="flex items-center gap-2.5 sm:gap-3.5">
+            <div className="grid h-10 w-10 sm:h-12 sm:w-12 shrink-0 place-items-center rounded-xl border border-tft-border bg-tft-elevated text-tft-primary">
+              <Users className="h-5 w-5 sm:h-6 sm:w-6 stroke-[1.75]" />
             </div>
-            <span className="text-[11px] font-semibold text-tft-success">High Retention</span>
+            <div className="min-w-0 flex-1">
+              <div className="text-base sm:text-2xl xl:text-3xl font-black text-tft-text tracking-tight leading-none truncate">
+                78%
+              </div>
+              <div className="mt-1 text-[11px] font-bold text-tft-muted truncate">
+                Repeat Students
+              </div>
+            </div>
           </div>
-          <div className="mt-5 text-3xl sm:text-4xl font-black text-tft-text tracking-tight">
-            78%
-          </div>
-          <div className="mt-1 text-xs font-bold text-tft-text">
-            Repeat Students
-          </div>
-          <div className="text-[11px] text-tft-muted">7 students rebooked follow-ups</div>
         </div>
       </section>
 
@@ -312,13 +314,20 @@ export function TutorDashboardView({
         </section>
       </div>
 
-      {/* Transaction Ledger Table */}
+      {/* Transaction Ledger Table (Capped at 5 items) */}
       <section className="overflow-hidden rounded-2xl border border-tft-border bg-tft-surface">
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-tft-border p-5">
           <div>
-            <h2 className="text-base font-bold text-tft-text">
-              Recent Session Ledger
-            </h2>
+            <div className="flex items-center gap-2">
+              <h2 className="text-base font-bold text-tft-text">
+                Recent Session Ledger
+              </h2>
+              {transactions.length > 5 && (
+                <span className="text-xs text-tft-muted font-semibold">
+                  (Showing 5 most recent)
+                </span>
+              )}
+            </div>
             <p className="mt-0.5 text-xs text-tft-muted">
               Synchronized earnings ledger updated upon student booking
             </p>
@@ -347,7 +356,7 @@ export function TutorDashboardView({
               </tr>
             </thead>
             <tbody className="divide-y divide-tft-border">
-              {transactions.map((tx) => (
+              {cappedTransactions.map((tx) => (
                 <tr key={tx.id} className="hover:bg-tft-elevated/50">
                   <td className="px-5 py-3.5">
                     <div className="font-bold text-tft-text">{tx.student}</div>
@@ -430,7 +439,6 @@ export function TutorDashboardView({
                 </div>
               ) : payoutDone ? (
                 <div className="py-8 text-center text-xs space-y-4">
-                  {/* SVG Checkmark */}
                   <div className="relative mx-auto grid h-16 w-16 place-items-center">
                     <motion.span
                       initial={{ scale: 0.8, opacity: 0.8 }}

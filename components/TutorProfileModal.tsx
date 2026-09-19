@@ -151,7 +151,7 @@ export function TutorProfileModal({
                 <span className="text-[11px] text-tft-muted">Sample reviews</span>
               </div>
               <div className="mt-3 space-y-2.5">
-                {tutor.reviews.map((rev) => (
+                {tutor.reviews.slice(0, 3).map((rev) => (
                   <article
                     key={rev.id}
                     className="rounded-xl border border-tft-border bg-tft-elevated p-3 text-xs"
